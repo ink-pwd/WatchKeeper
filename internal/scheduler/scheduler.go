@@ -17,6 +17,8 @@ import (
 Далее, дождавшись время на выполнение, передаем запрос в очередь на выполнение.
 */
 
+const DefaultQueueKey = "monitor:queue"
+
 type TaskMember struct {
 	ChatID int64  `json:"chat_id"`
 	Addr   string `json:"addr"`
@@ -27,7 +29,6 @@ type Scheduler struct {
 	interval time.Duration
 	signalCh chan struct{}
 	queue    *queue.Queue
-	key      string
 }
 
 func NewScheduler(rdb *redis.Client, interval time.Duration,
@@ -37,7 +38,6 @@ func NewScheduler(rdb *redis.Client, interval time.Duration,
 		interval: interval,
 		signalCh: make(chan struct{}, 1),
 		queue:    queue,
-		key:      "monitor:queue",
 	}
 }
 
@@ -56,7 +56,7 @@ func (s *Scheduler) AddTask(chat_id int64, addr string) error {
 		return err
 	}
 
-	err = s.rdb.ZAdd(context.Background(), s.key, redis.Z{
+	err = s.rdb.ZAdd(context.Background(), DefaultQueueKey, redis.Z{
 		Score:  float64(time.Now().Add(s.interval).Unix()),
 		Member: string(task),
 	}).Err()
@@ -68,10 +68,7 @@ func (s *Scheduler) AddTask(chat_id int64, addr string) error {
 	/*
 		Даем сигнал планировщику, что задача добавлена.
 	*/
-	select {
-	case s.signalCh <- struct{}{}:
-	default:
-	}
+	s.Signal()
 
 	return nil
 }
@@ -100,7 +97,7 @@ func (s *Scheduler) taskProcessing() {
 		/*
 			Берем элемент удаляя его из очереди.
 		*/
-		result, err = s.rdb.ZPopMin(context.Background(), s.key, 1).Result()
+		result, err = s.rdb.ZPopMin(context.Background(), DefaultQueueKey, 1).Result()
 		if err != nil || len(result) == 0 {
 			/*
 				Выходим из цикла если не получили элемент или получили ошибку
@@ -135,5 +132,12 @@ func (s *Scheduler) taskProcessing() {
 			ChatID: task.ChatID,
 			Addr:   task.Addr,
 		})
+	}
+}
+
+func (s *Scheduler) Signal() {
+	select {
+	case s.signalCh <- struct{}{}:
+	default:
 	}
 }

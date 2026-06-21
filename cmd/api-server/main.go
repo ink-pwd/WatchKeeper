@@ -26,6 +26,7 @@ func main() {
 		w     *worker.Worker
 		i     int
 		err   error
+		count int64
 	)
 	cfg, err = config.GetConfig()
 	if err != nil {
@@ -69,6 +70,16 @@ func main() {
 	for i = range cfg.WorkerPoolSize {
 		log.Printf("[Info] %d worker start", i+1)
 		go w.Start()
+	}
+	/*
+		Проверяем есть ли уже элементы в redis.
+		Это может произойти если программа досрочно завершилась и redis сохранил
+		Запросы, ожидающие отправки на обработку.
+		В случае наличия таких запрсов - даем сигнал планировщику.
+	*/
+	count, err = rdb.ZCard(context.Background(), scheduler.DefaultQueueKey).Result()
+	if err == nil && count > 0 {
+		sched.Signal()
 	}
 	tg.ListenServ()
 }
