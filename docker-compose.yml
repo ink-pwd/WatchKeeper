@@ -1,0 +1,23 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    # Запускаем Redis с AOF для сохранения данных Redis на диск
+    command: redis-server --appendonly yes --appendfsync everysec
+    # Монтируем volume, чтобы данные сохранялись между перезапусками контейнера
+    volumes:
+      - redis_data:/data
+
+  scankeeper:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - redis
+    env_file:
+      - .env
+
+# Объявляем именованный volume для перезаписи данных Redis
+volumes:
+  redis_data:
