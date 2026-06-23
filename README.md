@@ -120,6 +120,11 @@ docker compose up --build -d
 * Website status dashboard
 * Multiple notification channels
 
+## Video Overview
+
+[![Микросервис WatchKeeper. Golang.](https://youtube.com)](https://youtu.be/KQl2AvHB5No?si=p8Dh1YUlqnahbovb)
+
+
 ## License
 
 MIT

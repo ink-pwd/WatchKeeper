@@ -10,7 +10,7 @@ services:
     volumes:
       - redis_data:/data
 
-  scankeeper:
+  watchkeeper:
     build: .
     restart: unless-stopped
     depends_on:
