@@ -122,8 +122,7 @@ docker compose up --build -d
 
 ## Video Overview
 
-[![Микросервис WatchKeeper. Golang.](https://youtube.com)](https://youtu.be/KQl2AvHB5No?si=p8Dh1YUlqnahbovb)
-
+[![Микросервис WatchKeeper. Golang.](https://github.com/user-attachments/assets/a7c108cc-bbdd-45c5-83ae-809ec793cda9)](https://youtu.be/KQl2AvHB5No)
 
 ## License
 
